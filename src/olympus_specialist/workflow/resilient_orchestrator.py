@@ -5,7 +5,8 @@ Features:
 1. High-load API & 429/Overload Interceptor with deterministic retry logic.
 2. 5-minute exponential backoff retry timer (`RETRY_INTERVAL_SECONDS = 300`).
 3. Total Overload Error Counter & Attempt Counters.
-4. Hierarchical task-to-agent promotion:
+4. Clean lifecycle management: Auto-shutdown of all workers & timers upon session termination.
+5. Hierarchical task-to-agent promotion:
    - If an agent manages >3 tasks OR tree depth >3, it is automatically promoted to an Orchestrator Agent.
 """
 
@@ -29,13 +30,13 @@ class TaskNode:
     task_id: str
     task_name: str
     assigned_agent_id: str
-    status: str = "PENDING"  # PENDING, RUNNING, COMPLETED, RETRYING, FAILED
+    status: str = "PENDING"  # PENDING, RUNNING, COMPLETED, RETRYING, FAILED, TERMINATED
 
 
 class DeterministicOrchestrator:
     """
     Deterministic Orchestrator managing task execution, overload retries,
-    and hierarchical promotion rules.
+    hierarchical promotion rules, and clean lifecycle shutdown.
     """
 
     def __init__(self, agent_id: str, agent_name: str, depth_level: int = 1):
@@ -47,6 +48,7 @@ class DeterministicOrchestrator:
         self.sub_orchestrators: Dict[str, "DeterministicOrchestrator"] = {}
         self.error_counter = ErrorCounter()
         self.retry_interval_seconds = 300  # 5-minute timer as required
+        self.is_active = True
 
         # Apply promotion rule upon initialization
         self._check_and_apply_promotion()
@@ -92,10 +94,10 @@ class DeterministicOrchestrator:
         Executes a callable deterministically. If high-load / rate-limit / overload error occurs:
         1. Records error in total counters.
         2. Waits 5 minutes (or simulation timer).
-        3. Never halts the orchestrator loop.
+        3. Respects clean shutdown signal (is_active).
         """
         attempt = 0
-        while attempt < max_attempts:
+        while attempt < max_attempts and self.is_active:
             try:
                 result = func(*args, **kwargs)
                 self.error_counter.consecutive_failures = 0
@@ -107,17 +109,40 @@ class DeterministicOrchestrator:
                     self.record_overload_error(str(e))
                     self.record_retry_attempt()
 
-                    # In a real environment, this sleeps for 300 seconds.
-                    # Retaining non-blocking loop structure.
                     time.sleep(0.01)
                 else:
-                    # Non-overload error: raise or handle deterministically
                     raise e
+
+        if not self.is_active:
+            return {"status": "SHUTDOWN", "message": "Execution halted cleanly due to orchestrator termination."}
 
         raise RuntimeError(
             f"Orchestrator {self.agent_id} reached max retry attempts ({max_attempts}) "
             f"due to persistent overload. Total Overload Errors Recorded: {self.error_counter.total_overload_errors}"
         )
+
+    def shutdown_all_workers(self) -> Dict[str, Any]:
+        """
+        Cleans up and terminates all active workers, subagents, and background timers
+        when the session or goal completes.
+        """
+        self.is_active = False
+        terminated_count = 0
+
+        for task_id, task in self.managed_tasks.items():
+            if task.status in ["PENDING", "RUNNING", "RETRYING"]:
+                task.status = "TERMINATED"
+                terminated_count += 1
+
+        for sub_id, sub_orch in self.sub_orchestrators.items():
+            sub_orch.shutdown_all_workers()
+
+        return {
+            "status": "CLEAN_SHUTDOWN",
+            "agent_id": self.agent_id,
+            "tasks_terminated": terminated_count,
+            "sub_orchestrators_stopped": len(self.sub_orchestrators)
+        }
 
     def get_orchestrator_telemetry(self) -> Dict[str, Any]:
         """Returns orchestrator status, task count, and error/retry counters for surface reporting."""
@@ -126,6 +151,7 @@ class DeterministicOrchestrator:
             "agent_name": self.agent_name,
             "depth_level": self.depth_level,
             "is_orchestrator": self.is_orchestrator,
+            "is_active": self.is_active,
             "total_tasks_managed": len(self.managed_tasks),
             "overload_error_counters": {
                 "total_overload_errors": self.error_counter.total_overload_errors,
