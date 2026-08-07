@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "evident-catalog-mcp": {
+      "command": "python",
+      "args": [
+        ".mcp/servers/evident_catalog_mcp.py"
+      ],
+      "env": {
+        "PYTHONPATH": "src"
+      },
+      "description": "Model Context Protocol Server for Evident Scientific Product Catalog Lookups & L1 Optical Hardware Matching."
+    }
+  }
+}

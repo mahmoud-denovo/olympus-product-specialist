@@ -1,0 +1,171 @@
+[
+  {
+    "id": "scenario_001_metallurgical_darkfield",
+    "user_query": "Configure an upright metallurgical microscope for 50x darkfield defect inspection.",
+    "expected_slots": {
+      "application": "metallurgical",
+      "observation_mode": "Darkfield",
+      "magnification": 50
+    },
+    "expected_stand": "BX53M",
+    "expected_objective": "MPLFLN-BD",
+    "source_provenance": "https://evidentscientific.com/en/products/upright/bx53m/",
+    "is_amplified": false
+  },
+  {
+    "id": "scenario_002_biological_fluorescence",
+    "user_query": "Need an inverted biological microscope for live cell fluorescence imaging.",
+    "expected_slots": {
+      "application": "biological",
+      "observation_mode": "Fluorescence",
+      "magnification": 40
+    },
+    "expected_stand": "IX73",
+    "expected_objective": "UPLAPO",
+    "source_provenance": "https://evidentscientific.com/en/products/inverted/ix73/",
+    "is_amplified": false
+  },
+  {
+    "id": "scenario_003_semiconductor_wafer",
+    "user_query": "Configure inverted microscope for semiconductor wafer defect inspection in DIC mode.",
+    "expected_slots": {
+      "application": "semiconductor",
+      "observation_mode": "DIC",
+      "magnification": 100
+    },
+    "expected_stand": "GX53",
+    "expected_objective": "LMPLFLN-BD",
+    "source_provenance": "https://evidentscientific.com/en/products/inverted/gx53/",
+    "is_amplified": true
+  },
+  {
+    "id": "scenario_004_educational_brightfield",
+    "user_query": "Provide a basic clinical educational microscope for student brightfield histology.",
+    "expected_slots": {
+      "application": "histology",
+      "observation_mode": "Brightfield",
+      "magnification": 10
+    },
+    "expected_stand": "CX23",
+    "expected_objective": "Plan Achromat",
+    "source_provenance": "https://evidentscientific.com/en/products/upright/cx23/",
+    "is_amplified": true
+  },
+  {
+    "id": "scenario_005_polarized_light_mineralogy",
+    "user_query": "Configure BX53M for polarized light mineralogy and crystal axis stress evaluation.",
+    "expected_slots": {
+      "application": "mineralogy",
+      "observation_mode": "Polarized",
+      "magnification": 20
+    },
+    "expected_stand": "BX53M",
+    "expected_objective": "MPLFLN-BD",
+    "source_provenance": "https://evidentscientific.com/en/products/upright/bx53m/",
+    "is_amplified": true
+  },
+  {
+    "id": "scenario_006_inverted_materials_metallography",
+    "user_query": "I need an inverted system for cross-section metallography of heavy alloy castings.",
+    "expected_slots": {
+      "application": "metallography",
+      "observation_mode": "Brightfield",
+      "magnification": 50
+    },
+    "expected_stand": "GX53",
+    "expected_objective": "LMPLFLN-BD",
+    "source_provenance": "https://evidentscientific.com/en/products/inverted/gx53/",
+    "is_amplified": true
+  },
+  {
+    "id": "scenario_007_phase_contrast_cell_culture",
+    "user_query": "Configure IX73 for phase contrast observation of unstained cell cultures.",
+    "expected_slots": {
+      "application": "cell_culture",
+      "observation_mode": "Phase Contrast",
+      "magnification": 20
+    },
+    "expected_stand": "IX73",
+    "expected_objective": "UPLFLN-PH",
+    "source_provenance": "https://evidentscientific.com/en/products/inverted/ix73/",
+    "is_amplified": true
+  },
+  {
+    "id": "scenario_008_high_resolution_dic_materials",
+    "user_query": "Set up high-resolution differential interference contrast (DIC) on BX53M for surface topography.",
+    "expected_slots": {
+      "application": "surface_topography",
+      "observation_mode": "DIC",
+      "magnification": 100
+    },
+    "expected_stand": "BX53M",
+    "expected_objective": "MPLFLN-BD",
+    "source_provenance": "https://evidentscientific.com/en/products/upright/bx53m/",
+    "is_amplified": true
+  },
+  {
+    "id": "scenario_009_cleanroom_wafer_inspection",
+    "user_query": "Cleanroom wafer inspection setup requiring long working distance objectives.",
+    "expected_slots": {
+      "application": "cleanroom_semiconductor",
+      "observation_mode": "Darkfield",
+      "magnification": 50
+    },
+    "expected_stand": "GX53",
+    "expected_objective": "LMPLFLN-BD",
+    "source_provenance": "https://evidentscientific.com/en/products/inverted/gx53/",
+    "is_amplified": true
+  },
+  {
+    "id": "scenario_010_pathology_multi_head",
+    "user_query": "Histopathology multi-viewer upright microscope setup.",
+    "expected_slots": {
+      "application": "pathology",
+      "observation_mode": "Brightfield",
+      "magnification": 40
+    },
+    "expected_stand": "BX53M",
+    "expected_objective": "MPLFLN-BD",
+    "source_provenance": "https://evidentscientific.com/en/products/upright/bx53m/",
+    "is_amplified": true
+  },
+  {
+    "id": "scenario_auto_001",
+    "input": "Automated defect inspection query iteration 1",
+    "expected_slots": {
+      "application": "metallurgical",
+      "observation_mode": "Darkfield",
+      "magnification": 50
+    },
+    "expected_stand": "BX53M",
+    "expected_objective": "MPLFLN-BD",
+    "source_provenance": "https://evidentscientific.com/en/products/upright/bx53m/",
+    "is_amplified": true
+  },
+  {
+    "id": "scenario_auto_002",
+    "input": "Automated defect inspection query iteration 2",
+    "expected_slots": {
+      "application": "metallurgical",
+      "observation_mode": "Darkfield",
+      "magnification": 50
+    },
+    "expected_stand": "BX53M",
+    "expected_objective": "MPLFLN-BD",
+    "source_provenance": "https://evidentscientific.com/en/products/upright/bx53m/",
+    "is_amplified": true
+  },
+  {
+    "id": "scenario_auto_003",
+    "input": "Automated defect inspection query iteration 3",
+    "expected_slots": {
+      "application": "metallurgical",
+      "observation_mode": "Darkfield",
+      "magnification": 50
+    },
+    "expected_stand": "BX53M",
+    "expected_objective": "MPLFLN-BD",
+    "source_provenance": "https://evidentscientific.com/en/products/upright/bx53m/",
+    "is_amplified": true
+  }
+]

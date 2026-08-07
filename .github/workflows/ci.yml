@@ -1,0 +1,43 @@
+name: Olympus Product Specialist Production CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-test-eval:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-asyncio fastapi uvicorn pydantic rich requests
+
+      - name: Run Pytest Test Suite (54 Tests)
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m pytest tests/ -v
+
+      - name: Run Google ADK Formal Evaluation Suite (10 Scenarios)
+        env:
+          PYTHONPATH: src
+        run: |
+          python evals/reporters/eval_reporter.py
+
+      - name: Verify Docker Container Configs
+        run: |
+          docker build -t olympus-api:test -f Dockerfile.api .
+          docker build -t olympus-judge:test -f Dockerfile.judge .
+          docker build -t olympus-evals:test -f Dockerfile.evals .

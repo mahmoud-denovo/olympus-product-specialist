@@ -1,0 +1,87 @@
+# ==============================================================================
+# Google ADK & agents-cli Integration Manifest
+# Project: olympus-product-specialist
+# Platform DNA: Live Product Specialist Agent Tree
+# ==============================================================================
+
+schema_version: "1.0"
+
+metadata:
+  name: "olympus-product-specialist"
+  display_name: "Olympus Product Specialist Live Agent Tree"
+  version: "0.1.0"
+  description: "AI-First Live Web Agent Specialist for Olympus/Evident Microscopy Systems"
+  author: "Olympus Product Specialist Team"
+  license: "Proprietary"
+
+runtime:
+  framework: "google-adk"
+  python_version: ">=3.11"
+  entrypoint:
+    module: "olympus_specialist.adk_app"
+    factory: "create_adk_app"
+    app_accessor: "get_adk_app"
+    cli_command: "olympus-specialist"
+
+agent_hierarchy:
+  root_agent:
+    id: "root_specialist"
+    name: "Olympus Live Product Specialist Lead"
+    role: "Root Agent Orchestrator & Live Sales Engineering Consultant"
+    default_model: "gemini-2.5-flash"
+    temperature: 0.1
+    sop_reference: "src/olympus_specialist/sops/specialist_sop.yaml"
+    prompt_template: "src/olympus_specialist/prompts/system_prompt.yaml"
+
+  subagents:
+    - id: "hitl_interactive_clarification_subagent"
+      name: "Human-in-the-Loop Clarification Subagent"
+      role: "Interactive Agent Mode Enforcing Minimum Sufficient Clarification"
+      model: "gemini-2.5-flash"
+      temperature: 0.2
+      cost_category: "standard"
+
+    - id: "evident_catalog_provenance_subagent"
+      name: "Evident Scientific Provenance Subagent"
+      role: "Live Evident/Olympus Product Spec Extractor & Domain Source Anchor Verification"
+      model: "gemini-2.5-flash-lite"
+      temperature: 0.0
+      cost_category: "low_cost"
+
+    - id: "optical_compatibility_validator_subagent"
+      name: "Optical Hardware Compatibility Subagent"
+      role: "L1 Deterministic Optical Compatibility & Mechanical Alignment Engine"
+      model: "local-agy-pool"
+      temperature: 0.0
+      cost_category: "free_local"
+
+    - id: "self_healing_remediation_engine"
+      name: "Self-Healing Remediation Subagent"
+      role: "Autonomous Error Catching, Parameter Repair & Flow Resumption"
+      model: "gemini-2.5-flash"
+      temperature: 0.0
+      cost_category: "standard"
+
+telemetry:
+  enabled: true
+  tracker_module: "olympus_specialist.telemetry.hierarchical_tracker"
+  tracker_class: "HierarchicalTokenTracker"
+  tracked_metrics:
+    - "prompts"
+    - "response_metadata"
+    - "tool_calls"
+    - "token_spend"
+    - "agent_hierarchy_rollup"
+  export_format: "json"
+  log_directory: "logs/"
+
+guardrails:
+  daily_budget_usd: 5.00
+  circuit_breaker_module: "olympus_specialist.guardrails.cost_gate"
+  circuit_breaker_function: "check_budget_limit"
+  idle_shutdown_seconds: 300
+
+evals:
+  dataset_path: "evals/datasets/golden_scenarios.json"
+  grader_module: "evals.graders.local_judge"
+  command: "agents-cli eval --manifest agents-cli-manifest.yaml"

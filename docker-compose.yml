@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  olympus-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: olympus-api-service
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app/src
+    volumes:
+      - ./canonical_catalog.db:/app/canonical_catalog.db
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  olympus-judge:
+    build:
+      context: .
+      dockerfile: Dockerfile.judge
+    container_name: olympus-judge-service
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app/src
+    depends_on:
+      - olympus-api
+    restart: on-failure
+
+  olympus-evals:
+    build:
+      context: .
+      dockerfile: Dockerfile.evals
+    container_name: olympus-evals-service
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app/src
+    volumes:
+      - ./evals/reports:/app/evals/reports
+      - ./evals/datasets:/app/evals/datasets
+    depends_on:
+      - olympus-judge
+    restart: on-failure
