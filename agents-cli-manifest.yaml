@@ -1,7 +1,7 @@
 # ==============================================================================
 # Google ADK & agents-cli Integration Manifest
 # Project: olympus-product-specialist
-# Platform DNA: Live Product Specialist Agent Tree (Hybrid 3D Local First)
+# Platform DNA: Live Product Specialist Agent Tree (Local-First Fleet x LLM Evals Subagent)
 # ==============================================================================
 
 schema_version: "1.0"
@@ -9,8 +9,8 @@ schema_version: "1.0"
 metadata:
   name: "olympus-product-specialist"
   display_name: "Olympus Product Specialist Hybrid Agent Tree"
-  version: "0.2.0"
-  description: "AI-First Live Web Agent Specialist with 3 Local Worker Subagents ($0 Cost) & Dedicated LLM API Debug/Synthesis Budget"
+  version: "0.2.1"
+  description: "AI-First Live Web Agent Specialist with 3 Local Worker Subagents ($0 Cost) & 1 Dedicated LLM Scenario Generator Subagent"
   author: "Olympus Product Specialist Team"
   license: "Proprietary"
 
@@ -35,7 +35,7 @@ agent_hierarchy:
 
   subagents:
     # --------------------------------------------------------------------------
-    # 3 Local Worker Subagents ($0 Cost, Runs indefinitely on user machine)
+    # 1. THREE LOCAL WORKER SUBAGENTS ($0.00 Cost, Local Python/SQLite Engines)
     # --------------------------------------------------------------------------
     - id: "local_optics_worker"
       name: "Local Optical Rules Worker Subagent"
@@ -59,7 +59,17 @@ agent_hierarchy:
       cost_category: "free_local"
 
     # --------------------------------------------------------------------------
-    # Cloud / API Reserve Subagents (Uses $5.00/day Budget strictly for Debug & Deep Synthesis)
+    # 2. ISOLATED LLM SUBAGENT (Consumes Tokens strictly for Evals & Scenarios Generation)
+    # --------------------------------------------------------------------------
+    - id: "eval_scenario_generator_subagent"
+      name: "Evaluation Scenario Generator LLM Subagent"
+      role: "Isolated paid subagent continuously generating, mutating, and crafting complex benchmark evaluation scenarios"
+      model: "gemini-2.5-flash"
+      temperature: 0.7
+      cost_category: "evals_generator_reserve"
+
+    # --------------------------------------------------------------------------
+    # 3. DEBUGGING & HITL SUBAGENTS (Uses Reserved $5.00/day Budget for Edge Cases)
     # --------------------------------------------------------------------------
     - id: "synthesis_and_debug_subagent"
       name: "Deep 3D Synthesis & Debugging Subagent"

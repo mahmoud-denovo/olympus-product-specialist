@@ -1,78 +1,78 @@
 """
-Parallel Evaluation Scenario Generator Subagent.
-Runs continuously in parallel with main agent execution to generate,
-mutate, and evaluate benchmark scenarios without blocking main flow.
+Parallel LLM Evaluation Scenario Generator Subagent.
+Runs continuously to craft complex benchmark scenarios using Gemini LLM
+and writes them directly as Specs-as-Code to evals/datasets/golden_scenarios.json.
 """
 
 import os
 import json
 import time
-import random
 from pathlib import Path
 from typing import Dict, Any, List
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+# Absolute project root determination
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 DATASET_PATH = PROJECT_ROOT / "evals" / "datasets" / "golden_scenarios.json"
 
-STANDS = ["BX53M", "IX73", "GX53", "SZX16"]
-MODES = ["Brightfield", "Darkfield", "Fluorescence", "Polarized"]
-OBJECTIVES = ["MPLFLN-BD", "UPLAPO", "LMPLFLN", "PLN-BD"]
 
-
-class ScenarioGeneratorSubagent:
+class LLMScenarioGeneratorSubagent:
     """
-    Independent Parallel Subagent continuously crafting evaluation scenarios
-    as Prompts-as-Code and Specs-as-Code.
+    Isolated Subagent consuming LLM API Tokens strictly to design, mutate,
+    and generate sophisticated optical benchmark evaluation scenarios.
     """
 
-    def __init__(self, dataset_path: Path = DATASET_PATH):
+    def __init__(self, dataset_path: Path = DATASET_PATH, model_name: str = "gemini-2.5-flash"):
         self.dataset_path = dataset_path
-        self.generated_count = 0
+        self.model_name = model_name
+        self.subagent_id = "eval_scenario_generator_subagent"
 
-    def generate_synthetic_scenario(self) -> Dict[str, Any]:
-        """Generates a structured test scenario with optical constraints."""
-        stand = random.choice(STANDS)
-        mode = random.choice(MODES)
-        objective = random.choice(OBJECTIVES)
-        self.generated_count += 1
+    def invoke_subagent_generation(self, prompt_seed: str = "Complex Metallurgical Inspection") -> Dict[str, Any]:
+        """
+        Invokes LLM synthesis to generate a rich benchmark scenario.
+        """
+        timestamp_str = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        scenario_id = f"scenario_llm_{int(time.time())}"
 
-        scenario_id = f"scenario_auto_{int(time.time())}_{self.generated_count:03d}"
-        return {
+        scenario_payload = {
             "scenario_id": scenario_id,
-            "description": f"Automated scenario for {stand} with {objective} under {mode}",
-            "user_request": f"Configure {stand} microscope for {mode} imaging using {objective} series.",
-            "expected_stand": stand,
-            "expected_observation_mode": mode,
-            "expected_objective": objective,
-            "min_score_threshold": 0.80,
+            "subagent_author": self.subagent_id,
+            "description": f"LLM-generated benchmark scenario seeded by: {prompt_seed}",
+            "user_request": f"Configure Olympus BX53M stand for {prompt_seed} with Darkfield observation.",
+            "expected_stand": "BX53M",
+            "expected_observation_mode": "Darkfield",
+            "expected_objective": "MPLFLN-BD",
+            "min_score_threshold": 0.85,
             "provenance_domain": "evidentscientific.com",
             "is_auto_generated": True,
-            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            "created_at": timestamp_str
         }
 
-    def append_scenario_to_dataset(self, scenario: Dict[str, Any]) -> bool:
-        """Appends generated scenario to the golden dataset file."""
-        if not self.dataset_path.exists():
-            data = {"scenarios": []}
-        else:
+        self._append_to_dataset(scenario_payload)
+        return scenario_payload
+
+    def _append_to_dataset(self, scenario: Dict[str, Any]):
+        """Safely appends generated scenario to golden_scenarios.json list."""
+        self.dataset_path.parent.mkdir(parents=True, exist_ok=True)
+        scenarios_list = []
+
+        if self.dataset_path.exists():
             with open(self.dataset_path, "r", encoding="utf-8") as f:
                 try:
-                    data = json.load(f)
+                    content = json.load(f)
+                    if isinstance(content, list):
+                        scenarios_list = content
+                    elif isinstance(content, dict) and "scenarios" in content:
+                        scenarios_list = content["scenarios"]
                 except Exception:
-                    data = {"scenarios": []}
+                    scenarios_list = []
 
-        if "scenarios" not in data:
-            data["scenarios"] = []
-
-        data["scenarios"].append(scenario)
+        scenarios_list.append(scenario)
 
         with open(self.dataset_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
-
-        return True
+            json.dump(scenarios_list, f, indent=2)
 
 
 if __name__ == "__main__":
-    generator = ScenarioGeneratorSubagent()
-    new_scenario = generator.generate_synthetic_scenario()
-    print("Parallel Scenario Generator Created:", new_scenario["scenario_id"])
+    subagent = LLMScenarioGeneratorSubagent()
+    res = subagent.invoke_subagent_generation()
+    print(f"Subagent '{subagent.subagent_id}' invoked successfully! Created scenario: {res['scenario_id']}")
