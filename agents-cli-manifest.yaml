@@ -16,7 +16,7 @@ metadata:
 
 runtime:
   framework: "google-adk"
-  python_version: ">=3.12"
+  python_version: ">=3.14"
   agent_directory: "src/olympus_specialist"
   entrypoint:
     module: "olympus_specialist.adk_app"

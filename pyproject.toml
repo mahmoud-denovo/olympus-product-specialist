@@ -7,7 +7,7 @@ name = "olympus-product-specialist"
 version = "0.1.0"
 description = "AI-First Web Platform & Technical Specialist for Olympus/Evident Microscopy Systems"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 dependencies = [
     "fastapi>=0.110.0",
     "uvicorn[standard]>=0.28.0",
