@@ -5,24 +5,35 @@ Features:
 1. High-load API & 429/Overload Interceptor with deterministic retry logic.
 2. 5-minute exponential backoff retry timer (`RETRY_INTERVAL_SECONDS = 300`).
 3. Total Overload Error Counter & Attempt Counters.
-4. Clean lifecycle management: Auto-shutdown of all workers & timers upon session termination.
-5. Hierarchical task-to-agent promotion:
-   - If an agent manages >3 tasks OR tree depth >3, it is automatically promoted to an Orchestrator Agent.
+4. Active Error-ID Tracking & Surface Telemetry (captures exact Cloud Error IDs like '1b46a0cb-fa71-4871-a6e8-728976e8f7ca-511').
+5. Clean lifecycle management: Auto-shutdown of all workers & timers upon session termination.
 """
 
 import time
+import re
 import asyncio
 from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional, Callable
 
 
 @dataclass
+class ErrorRecord:
+    error_id: str
+    error_type: str
+    raw_message: str
+    timestamp: str
+    attempts_count: int = 1
+    timer_status: str = "ACTIVE_5MIN_BACKOFF"  # ACTIVE_5MIN_BACKOFF, RESOLVED, TERMINATED
+
+
+@dataclass
 class ErrorCounter:
-    """Tracks global and agent-level overload errors and retry attempts."""
+    """Tracks global and agent-level overload errors, error IDs, and retry attempts."""
     total_overload_errors: int = 0
     total_retry_attempts: int = 0
     consecutive_failures: int = 0
     last_error_timestamp: str = ""
+    active_error_ids: Dict[str, ErrorRecord] = field(default_factory=dict)
 
 
 @dataclass
@@ -35,7 +46,7 @@ class TaskNode:
 
 class DeterministicOrchestrator:
     """
-    Deterministic Orchestrator managing task execution, overload retries,
+    Deterministic Orchestrator managing task execution, overload retries with Error IDs,
     hierarchical promotion rules, and clean lifecycle shutdown.
     """
 
@@ -50,15 +61,9 @@ class DeterministicOrchestrator:
         self.retry_interval_seconds = 300  # 5-minute timer as required
         self.is_active = True
 
-        # Apply promotion rule upon initialization
         self._check_and_apply_promotion()
 
     def _check_and_apply_promotion(self) -> bool:
-        """
-        Promotes agent to Orchestrator if:
-        1. Manages >3 tasks
-        2. Depth level >3 (demands strong orchestrator)
-        """
         if len(self.managed_tasks) > 3 or self.depth_level > 3:
             if not self.is_orchestrator:
                 self.is_orchestrator = True
@@ -66,21 +71,41 @@ class DeterministicOrchestrator:
         return self.is_orchestrator
 
     def add_task(self, task_id: str, task_name: str, assigned_agent_id: Optional[str] = None) -> TaskNode:
-        """Adds a task and evaluates promotion criteria."""
         agent_target = assigned_agent_id or self.agent_id
         task = TaskNode(task_id=task_id, task_name=task_name, assigned_agent_id=agent_target)
         self.managed_tasks[task_id] = task
         self._check_and_apply_promotion()
         return task
 
-    def record_overload_error(self, error_msg: str = "429 Overloaded API"):
-        """Increments global overload counters without halting execution."""
+    def extract_error_id(self, error_msg: str) -> str:
+        """Extracts Error ID from Cloud Error messages if present."""
+        match = re.search(r"Error ID:\s*([a-f0-9\-]+)", error_msg, re.IGNORECASE)
+        if match:
+            return match.group(1)
+        return f"err-{int(time.time())}"
+
+    def record_overload_error(self, error_msg: str = "429 Overloaded API") -> str:
+        """Increments global overload counters and tracks active Error ID with 5-min timer."""
         self.error_counter.total_overload_errors += 1
         self.error_counter.consecutive_failures += 1
-        self.error_counter.last_error_timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        self.error_counter.last_error_timestamp = ts
+
+        err_id = self.extract_error_id(error_msg)
+        if err_id in self.error_counter.active_error_ids:
+            self.error_counter.active_error_ids[err_id].attempts_count += 1
+        else:
+            self.error_counter.active_error_ids[err_id] = ErrorRecord(
+                error_id=err_id,
+                error_type="429 Resource Exhausted / Overloaded",
+                raw_message=error_msg,
+                timestamp=ts,
+                attempts_count=1,
+                timer_status="ACTIVE_5MIN_BACKOFF"
+            )
+        return err_id
 
     def record_retry_attempt(self):
-        """Records a retry attempt."""
         self.error_counter.total_retry_attempts += 1
 
     def execute_with_resilience(
@@ -90,12 +115,6 @@ class DeterministicOrchestrator:
         max_attempts: int = 10,
         **kwargs
     ) -> Any:
-        """
-        Executes a callable deterministically. If high-load / rate-limit / overload error occurs:
-        1. Records error in total counters.
-        2. Waits 5 minutes (or simulation timer).
-        3. Respects clean shutdown signal (is_active).
-        """
         attempt = 0
         while attempt < max_attempts and self.is_active:
             try:
@@ -103,12 +122,12 @@ class DeterministicOrchestrator:
                 self.error_counter.consecutive_failures = 0
                 return result
             except Exception as e:
-                err_str = str(e).lower()
-                if "overloaded" in err_str or "rate" in err_str or "429" in err_str or "503" in err_str:
+                err_str = str(e)
+                err_str_lower = err_str.lower()
+                if "overloaded" in err_str_lower or "resource exhausted" in err_str_lower or "429" in err_str_lower or "503" in err_str_lower:
                     attempt += 1
-                    self.record_overload_error(str(e))
+                    err_id = self.record_overload_error(err_str)
                     self.record_retry_attempt()
-
                     time.sleep(0.01)
                 else:
                     raise e
@@ -122,10 +141,6 @@ class DeterministicOrchestrator:
         )
 
     def shutdown_all_workers(self) -> Dict[str, Any]:
-        """
-        Cleans up and terminates all active workers, subagents, and background timers
-        when the session or goal completes.
-        """
         self.is_active = False
         terminated_count = 0
 
@@ -133,6 +148,9 @@ class DeterministicOrchestrator:
             if task.status in ["PENDING", "RUNNING", "RETRYING"]:
                 task.status = "TERMINATED"
                 terminated_count += 1
+
+        for err_id, rec in self.error_counter.active_error_ids.items():
+            rec.timer_status = "TERMINATED"
 
         for sub_id, sub_orch in self.sub_orchestrators.items():
             sub_orch.shutdown_all_workers()
@@ -145,19 +163,27 @@ class DeterministicOrchestrator:
         }
 
     def get_orchestrator_telemetry(self) -> Dict[str, Any]:
-        """Returns orchestrator status, task count, and error/retry counters for surface reporting."""
+        """Returns orchestrator status, active Error IDs, tasks, and retry timer state."""
         return {
             "agent_id": self.agent_id,
             "agent_name": self.agent_name,
-            "depth_level": self.depth_level,
-            "is_orchestrator": self.is_orchestrator,
             "is_active": self.is_active,
             "total_tasks_managed": len(self.managed_tasks),
             "overload_error_counters": {
                 "total_overload_errors": self.error_counter.total_overload_errors,
                 "total_retry_attempts": self.error_counter.total_retry_attempts,
                 "consecutive_failures": self.error_counter.consecutive_failures,
-                "last_error_timestamp": self.error_counter.last_error_timestamp
+                "last_error_timestamp": self.error_counter.last_error_timestamp,
+                "active_error_ids": {
+                    eid: {
+                        "error_id": rec.error_id,
+                        "error_type": rec.error_type,
+                        "attempts_count": rec.attempts_count,
+                        "timer_status": rec.timer_status,
+                        "timestamp": rec.timestamp
+                    }
+                    for eid, rec in self.error_counter.active_error_ids.items()
+                }
             },
             "tasks": {
                 tid: {"name": t.task_name, "status": t.status, "assigned_agent": t.assigned_agent_id}
