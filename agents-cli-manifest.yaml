@@ -1,16 +1,16 @@
 # ==============================================================================
 # Google ADK & agents-cli Integration Manifest
 # Project: olympus-product-specialist
-# Platform DNA: Live Product Specialist Agent Tree
+# Platform DNA: Live Product Specialist Agent Tree (Hybrid 3D Local First)
 # ==============================================================================
 
 schema_version: "1.0"
 
 metadata:
   name: "olympus-product-specialist"
-  display_name: "Olympus Product Specialist Live Agent Tree"
-  version: "0.1.0"
-  description: "AI-First Live Web Agent Specialist for Olympus/Evident Microscopy Systems"
+  display_name: "Olympus Product Specialist Hybrid Agent Tree"
+  version: "0.2.0"
+  description: "AI-First Live Web Agent Specialist with 3 Local Worker Subagents ($0 Cost) & Dedicated LLM API Debug/Synthesis Budget"
   author: "Olympus Product Specialist Team"
   license: "Proprietary"
 
@@ -26,40 +26,53 @@ runtime:
 agent_hierarchy:
   root_agent:
     id: "root_specialist"
-    name: "Olympus Live Product Specialist Lead"
-    role: "Root Agent Orchestrator & Live Sales Engineering Consultant"
+    name: "Olympus Master Resilient Orchestrator"
+    role: "Root Agent Orchestrator & Multi-Dimensional Task Manager"
     default_model: "gemini-2.5-flash"
     temperature: 0.1
     sop_reference: "src/olympus_specialist/sops/specialist_sop.yaml"
     prompt_template: "src/olympus_specialist/prompts/system_prompt.yaml"
 
   subagents:
+    # --------------------------------------------------------------------------
+    # 3 Local Worker Subagents ($0 Cost, Runs indefinitely on user machine)
+    # --------------------------------------------------------------------------
+    - id: "local_optics_worker"
+      name: "Local Optical Rules Worker Subagent"
+      role: "Executes deterministic stand, observation mode & objective compatibility checks ($0 Cost)"
+      model: "local-python-rules"
+      temperature: 0.0
+      cost_category: "free_local"
+
+    - id: "local_catalog_worker"
+      name: "Local Catalog & Web Inspector Worker Subagent"
+      role: "Performs instant local SQLite/vector catalog lookups & cached web spec verification ($0 Cost)"
+      model: "local-sqlite-vector"
+      temperature: 0.0
+      cost_category: "free_local"
+
+    - id: "local_formatter_worker"
+      name: "Local Formatter & Document Sync Subagent"
+      role: "Processes text formatting, bilingual translations & local architecture docs updates ($0 Cost)"
+      model: "local-text-processor"
+      temperature: 0.0
+      cost_category: "free_local"
+
+    # --------------------------------------------------------------------------
+    # Cloud / API Reserve Subagents (Uses $5.00/day Budget strictly for Debug & Deep Synthesis)
+    # --------------------------------------------------------------------------
+    - id: "synthesis_and_debug_subagent"
+      name: "Deep 3D Synthesis & Debugging Subagent"
+      role: "Handles complex multi-dimensional optical synthesis, edge cases, and self-healing debugging"
+      model: "gemini-2.5-flash"
+      temperature: 0.1
+      cost_category: "debug_reserve"
+
     - id: "hitl_interactive_clarification_subagent"
       name: "Human-in-the-Loop Clarification Subagent"
       role: "Interactive Agent Mode Enforcing Minimum Sufficient Clarification"
       model: "gemini-2.5-flash"
       temperature: 0.2
-      cost_category: "standard"
-
-    - id: "evident_catalog_provenance_subagent"
-      name: "Evident Scientific Provenance Subagent"
-      role: "Live Evident/Olympus Product Spec Extractor & Domain Source Anchor Verification"
-      model: "gemini-2.5-flash-lite"
-      temperature: 0.0
-      cost_category: "low_cost"
-
-    - id: "optical_compatibility_validator_subagent"
-      name: "Optical Hardware Compatibility Subagent"
-      role: "L1 Deterministic Optical Compatibility & Mechanical Alignment Engine"
-      model: "local-agy-pool"
-      temperature: 0.0
-      cost_category: "free_local"
-
-    - id: "self_healing_remediation_engine"
-      name: "Self-Healing Remediation Subagent"
-      role: "Autonomous Error Catching, Parameter Repair & Flow Resumption"
-      model: "gemini-2.5-flash"
-      temperature: 0.0
       cost_category: "standard"
 
 telemetry:
@@ -72,6 +85,7 @@ telemetry:
     - "tool_calls"
     - "token_spend"
     - "agent_hierarchy_rollup"
+    - "overload_error_counters"
   export_format: "json"
   log_directory: "logs/"
 
@@ -80,6 +94,7 @@ guardrails:
   circuit_breaker_module: "olympus_specialist.guardrails.cost_gate"
   circuit_breaker_function: "check_budget_limit"
   idle_shutdown_seconds: 300
+  overload_backoff_seconds: 300  # 5-minute timer backoff on API overload
 
 evals:
   dataset_path: "evals/datasets/golden_scenarios.json"
