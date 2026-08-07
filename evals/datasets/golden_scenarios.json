@@ -180,5 +180,18 @@
     "provenance_domain": "evidentscientific.com",
     "is_auto_generated": true,
     "created_at": "2026-08-07T20:08:45Z"
+  },
+  {
+    "scenario_id": "scenario_llm_1786133430",
+    "subagent_author": "eval_scenario_generator_subagent",
+    "description": "LLM-generated benchmark scenario seeded by: Live Slash Command Test Scenario",
+    "user_request": "Configure Olympus BX53M stand for Live Slash Command Test Scenario with Darkfield observation.",
+    "expected_stand": "BX53M",
+    "expected_observation_mode": "Darkfield",
+    "expected_objective": "MPLFLN-BD",
+    "min_score_threshold": 0.85,
+    "provenance_domain": "evidentscientific.com",
+    "is_auto_generated": true,
+    "created_at": "2026-08-07T20:10:30Z"
   }
 ]
