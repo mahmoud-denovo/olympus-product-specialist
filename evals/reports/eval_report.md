@@ -1,9 +1,9 @@
 # Google ADK Formal Evaluation Report — Olympus Product Specialist
 
-- **Evaluated At**: `2026-08-06T19:39:34Z`
+- **Evaluated At**: `2026-08-07T21:01:15Z`
 - **Pass Rate**: `100.0%`
-- **Average Quality Score**: `1.0`
-- **Total Scenarios**: `13` (Passed: `13`)
+- **Average Quality Score**: `0.95`
+- **Total Scenarios**: `17` (Passed: `17`)
 
 ## Scenario Results Table
 
@@ -22,3 +22,7 @@
 | `scenario_auto_001` | Automated defect inspection query iteration 1 | **BX53M** + MPLFLN-BD | `1.0` | `PASSED` |
 | `scenario_auto_002` | Automated defect inspection query iteration 2 | **BX53M** + MPLFLN-BD | `1.0` | `PASSED` |
 | `scenario_auto_003` | Automated defect inspection query iteration 3 | **BX53M** + MPLFLN-BD | `1.0` | `PASSED` |
+| `scenario_unknown` | Microscope query | **BX53M** + MPLFLN-BD | `0.8` | `PASSED` |
+| `scenario_unknown` | Microscope query | **BX53M** + MPLFLN-BD | `0.8` | `PASSED` |
+| `scenario_unknown` | Microscope query | **BX53M** + MPLFLN-BD | `0.8` | `PASSED` |
+| `scenario_unknown` | Microscope query | **BX53M** + MPLFLN-BD | `0.8` | `PASSED` |

@@ -1,16 +1,16 @@
 # ==============================================================================
 # Google ADK & agents-cli Integration Manifest
 # Project: olympus-product-specialist
-# Platform DNA: Live Product Specialist Agent Tree (Local-First Fleet x LLM Evals Subagent)
+# Platform DNA: Production-Only Product Specialist Agent Hierarchy
 # ==============================================================================
 
 schema_version: "1.0"
 
 metadata:
   name: "olympus-product-specialist"
-  display_name: "Olympus Product Specialist Hybrid Agent Tree"
-  version: "0.2.1"
-  description: "AI-First Live Web Agent Specialist with 3 Local Worker Subagents ($0 Cost) & 1 Dedicated LLM Scenario Generator Subagent"
+  display_name: "Olympus Product Specialist Production Fleet"
+  version: "1.0.0"
+  description: "Production-ready AI Specialist for Olympus/Evident Microscopy Systems with in-app local worker engines ($0 Cost)"
   author: "Olympus Product Specialist Team"
   license: "Proprietary"
 
@@ -27,8 +27,8 @@ runtime:
 agent_hierarchy:
   root_agent:
     id: "root_specialist"
-    name: "Olympus Master Resilient Orchestrator"
-    role: "Root Agent Orchestrator & Multi-Dimensional Task Manager"
+    name: "Olympus Master Specialist Orchestrator"
+    role: "Production Root Specialist Agent & Hardware Compatibility Manager"
     default_model: "gemini-2.5-flash"
     temperature: 0.1
     sop_reference: "src/olympus_specialist/sops/specialist_sop.yaml"
@@ -36,55 +36,28 @@ agent_hierarchy:
 
   subagents:
     # --------------------------------------------------------------------------
-    # 1. THREE LOCAL WORKER SUBAGENTS ($0.00 Cost, Local Python/SQLite Engines)
+    # PRODUCTION IN-APP WORKER SUBAGENTS ($0.00 Cost, Shipped Inside Repo)
     # --------------------------------------------------------------------------
     - id: "local_optics_worker"
-      name: "Local Optical Rules Worker Subagent"
-      role: "Executes deterministic stand, observation mode & objective compatibility checks ($0 Cost)"
+      name: "Optical Compatibility Rules Worker"
+      role: "Executes stand, observation mode, and objective optical compatibility checks ($0 Cost)"
       model: "local-python-rules"
       temperature: 0.0
       cost_category: "free_local"
 
     - id: "local_catalog_worker"
-      name: "Local Catalog & Web Inspector Worker Subagent"
-      role: "Performs instant local SQLite/vector catalog lookups & cached web spec verification ($0 Cost)"
+      name: "SQLite Catalog & Vector Inspector Worker"
+      role: "Performs instant local catalog lookups and spec verification ($0 Cost)"
       model: "local-sqlite-vector"
       temperature: 0.0
       cost_category: "free_local"
 
     - id: "local_formatter_worker"
-      name: "Local Formatter & Document Sync Subagent"
-      role: "Processes text formatting, bilingual translations & local architecture docs updates ($0 Cost)"
+      name: "Bilingual Formatter & Spec Document Sync Worker"
+      role: "Processes text formatting and bilingual document synthesis ($0 Cost)"
       model: "local-text-processor"
       temperature: 0.0
       cost_category: "free_local"
-
-    # --------------------------------------------------------------------------
-    # 2. ISOLATED LLM SUBAGENT (Consumes Tokens strictly for Evals & Scenarios Generation)
-    # --------------------------------------------------------------------------
-    - id: "eval_scenario_generator_subagent"
-      name: "Evaluation Scenario Generator LLM Subagent"
-      role: "Isolated paid subagent continuously generating, mutating, and crafting complex benchmark evaluation scenarios"
-      model: "gemini-2.5-flash"
-      temperature: 0.7
-      cost_category: "evals_generator_reserve"
-
-    # --------------------------------------------------------------------------
-    # 3. DEBUGGING & HITL SUBAGENTS (Uses Reserved $5.00/day Budget for Edge Cases)
-    # --------------------------------------------------------------------------
-    - id: "synthesis_and_debug_subagent"
-      name: "Deep 3D Synthesis & Debugging Subagent"
-      role: "Handles complex multi-dimensional optical synthesis, edge cases, and self-healing debugging"
-      model: "gemini-2.5-flash"
-      temperature: 0.1
-      cost_category: "debug_reserve"
-
-    - id: "hitl_interactive_clarification_subagent"
-      name: "Human-in-the-Loop Clarification Subagent"
-      role: "Interactive Agent Mode Enforcing Minimum Sufficient Clarification"
-      model: "gemini-2.5-flash"
-      temperature: 0.2
-      cost_category: "standard"
 
 telemetry:
   enabled: true
@@ -105,7 +78,7 @@ guardrails:
   circuit_breaker_module: "olympus_specialist.guardrails.cost_gate"
   circuit_breaker_function: "check_budget_limit"
   idle_shutdown_seconds: 300
-  overload_backoff_seconds: 300  # 5-minute timer backoff on API overload
+  overload_backoff_seconds: 300
 
 evals:
   dataset_path: "evals/datasets/golden_scenarios.json"

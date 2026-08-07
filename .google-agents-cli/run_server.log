@@ -1,0 +1,15 @@
+=== Starting server at 2026-08-07T21:00:40.853822+00:00 ===
+Command: uv run adk api_server --host 127.0.0.1 --port 18080 --reload_agents --no-reload .
+CWD: /Users/amirahajeer/Desktop/products-specialists-agents/olympus-product-specialist
+=== Started server process 32312 ===
+warning: The `tool.uv.dev-dependencies` field (used in `pyproject.toml`) is deprecated and will be removed in a future release; use `dependency-groups.dev` instead
+   Building olympus-product-specialist @ file:///Users/amirahajeer/Desktop/products-specialists-agents/olympus-product-specialist
+Downloading uvloop (1.3MiB)
+Downloading cryptography (3.8MiB)
+      Built olympus-product-specialist @ file:///Users/amirahajeer/Desktop/products-specialists-agents/olympus-product-specialist
+ Downloaded uvloop
+ Downloaded cryptography
+Uninstalled 1 package in 4ms
+Installed 35 packages in 58ms
+error: Failed to spawn: `adk`
+  Caused by: No such file or directory (os error 2)
