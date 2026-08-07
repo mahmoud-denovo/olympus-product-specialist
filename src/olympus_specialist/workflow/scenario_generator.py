@@ -1,58 +1,78 @@
+"""
+Parallel Evaluation Scenario Generator Subagent.
+Runs continuously in parallel with main agent execution to generate,
+mutate, and evaluate benchmark scenarios without blocking main flow.
+"""
+
+import os
 import json
-import hashlib
+import time
+import random
 from pathlib import Path
 from typing import Dict, Any, List
 
-DATASET_FILE = Path(__file__).resolve().parent.parent.parent.parent / "evals" / "datasets" / "golden_scenarios.json"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+DATASET_PATH = PROJECT_ROOT / "evals" / "datasets" / "golden_scenarios.json"
 
-class ScenarioGeneratorAgent:
-    """
-    Scenario Generator Agent that amplifies seed cases from official Evident sources
-    and dynamically enriches the golden evaluation dataset (evals/datasets/golden_scenarios.json).
-    """
-    def __init__(self):
-        self.dataset_path = DATASET_FILE
-        self.dataset_path.parent.mkdir(parents=True, exist_ok=True)
-        if not self.dataset_path.exists():
-            with open(self.dataset_path, "w", encoding="utf-8") as f:
-                json.dump([], f)
+STANDS = ["BX53M", "IX73", "GX53", "SZX16"]
+MODES = ["Brightfield", "Darkfield", "Fluorescence", "Polarized"]
+OBJECTIVES = ["MPLFLN-BD", "UPLAPO", "LMPLFLN", "PLN-BD"]
 
-    def amplify_seed_case(self, seed: Dict[str, Any]) -> Dict[str, Any]:
-        """Amplifies 1 or 2 seed parameters into a validated edge-case evaluation scenario."""
-        seed_id = seed.get("id") or f"scenario_{hashlib.md5(str(seed).encode('utf-8')).hexdigest()[:8]}"
-        amplified_scenario = {
-            "id": seed_id,
-            "input": seed.get("user_query", f"Need a system for {seed.get('application', 'industrial')} analysis."),
-            "expected_slots": {
-                "application": seed.get("application", "metallurgical"),
-                "observation_mode": seed.get("observation_mode", "Darkfield"),
-                "magnification": seed.get("magnification", 50)
-            },
-            "expected_stand": seed.get("stand_id", "BX53M"),
-            "expected_objective": seed.get("objective_series", "MPLFLN-BD"),
-            "source_provenance": seed.get("source_url", "https://evidentscientific.com/en/products/upright/bx53m/"),
-            "is_amplified": True
+
+class ScenarioGeneratorSubagent:
+    """
+    Independent Parallel Subagent continuously crafting evaluation scenarios
+    as Prompts-as-Code and Specs-as-Code.
+    """
+
+    def __init__(self, dataset_path: Path = DATASET_PATH):
+        self.dataset_path = dataset_path
+        self.generated_count = 0
+
+    def generate_synthetic_scenario(self) -> Dict[str, Any]:
+        """Generates a structured test scenario with optical constraints."""
+        stand = random.choice(STANDS)
+        mode = random.choice(MODES)
+        objective = random.choice(OBJECTIVES)
+        self.generated_count += 1
+
+        scenario_id = f"scenario_auto_{int(time.time())}_{self.generated_count:03d}"
+        return {
+            "scenario_id": scenario_id,
+            "description": f"Automated scenario for {stand} with {objective} under {mode}",
+            "user_request": f"Configure {stand} microscope for {mode} imaging using {objective} series.",
+            "expected_stand": stand,
+            "expected_observation_mode": mode,
+            "expected_objective": objective,
+            "min_score_threshold": 0.80,
+            "provenance_domain": "evidentscientific.com",
+            "is_auto_generated": True,
+            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         }
-        
-        # Append to golden scenarios dataset if not present
-        with open(self.dataset_path, "r+", encoding="utf-8") as f:
-            scenarios = json.load(f)
-            if not any(s.get("id") == seed_id for s in scenarios):
-                scenarios.append(amplified_scenario)
-                f.seek(0)
-                json.dump(scenarios, f, indent=2)
-                f.truncate()
 
-        return amplified_scenario
+    def append_scenario_to_dataset(self, scenario: Dict[str, Any]) -> bool:
+        """Appends generated scenario to the golden dataset file."""
+        if not self.dataset_path.exists():
+            data = {"scenarios": []}
+        else:
+            with open(self.dataset_path, "r", encoding="utf-8") as f:
+                try:
+                    data = json.load(f)
+                except Exception:
+                    data = {"scenarios": []}
+
+        if "scenarios" not in data:
+            data["scenarios"] = []
+
+        data["scenarios"].append(scenario)
+
+        with open(self.dataset_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+
+        return True
+
 
 if __name__ == "__main__":
-    agent = ScenarioGeneratorAgent()
-    res = agent.amplify_seed_case({
-        "id": "scenario_003_semiconductor_wafer",
-        "user_query": "I need a microscope for semiconductor wafer defect inspection.",
-        "application": "semiconductor",
-        "observation_mode": "DIC",
-        "stand_id": "GX53",
-        "objective_series": "LMPLFLN-BD"
-    })
-    print("Amplified Scenario Output:", res)
+    generator = ScenarioGeneratorSubagent()
+    new_scenario = generator.generate_synthetic_scenario()
+    print("Parallel Scenario Generator Created:", new_scenario["scenario_id"])
